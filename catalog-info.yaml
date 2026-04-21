@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.agent_name }}
+spec:
+  type: ai-agent
+  lifecycle: production
+  owner: ${{ values.owner }}
+``
