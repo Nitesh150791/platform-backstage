@@ -1,0 +1,74 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: ai-agent
+  title: AI Agent Service
+  description: Create a production-ready AI agent with infra, CI/CD and observability
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Agent Configuration
+      required:
+        - agent_name
+        - model_name
+        - owner
+      properties:
+        agent_name:
+          type: string
+          description: Unique agent name (lowercase, kebab-case)
+        model_name:
+          type: string
+          enum:
+            - anthropic.claude-v2
+            - amazon.titan-text
+            - llama2
+        owner:
+          type: string
+          description: Team owning this agent
+        environment:
+          type: string
+          default: dev
+          enum: [dev, staging, prod]
+
+  steps:
+    - id: fetch
+      name: Generate agent repository
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          agent_name: ${{ parameters.agent_name }}
+          model_name: ${{ parameters.model_name }}
+          owner: ${{ parameters.owner }}
+          environment: ${{ parameters.environment }}
+
+    - id: publish
+      name: Create GitHub repository
+      action: publish:github
+      input:
+        repoUrl: github.com/your-org/${{ parameters.agent_name }}
+        defaultBranch: main
+        description: AI agent ${{ parameters.agent_name }}
+
+    - id: pull-request
+      name: Create onboarding PR
+      action: github:pull-request
+      input:
+        repoUrl: github.com/your-org/${{ parameters.agent_name }}
+        branchName: bootstrap/platform
+        title: "chore: bootstrap AI agent platform setup"
+        description: |
+          This PR bootstraps:
+          - Terraform infra
+          - CI/CD pipelines
+          - Helm deployment
+          - Observability & IAM
+
+    - id: register
+      name: Register in Backstage Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: catalog-info.yaml
