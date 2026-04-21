@@ -1,0 +1,12 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    uses: your-org/platform-gha-templates/.github/workflows/deploy-eks.yml@v1
+    with:
+      agent_name: ${{ values.agent_name }}
+      environment: ${{ values.environment }}
